@@ -5,6 +5,9 @@ def main(page: ft.Page):
     #カウンター表示用のテキスト
     counter = ft.Text("0", size=50, data=0)
 
+    #
+    hoge = ft.Text("Hello, Flet!", size=30)
+
     #ボタンが押下された時に呼び出される関数
     def increment_click(e):
         counter.data += 1
@@ -24,13 +27,13 @@ def main(page: ft.Page):
     page.add(
         ft.SafeArea(
             ft.Container(
-                counter,
+                content = ft.Row(controls=[counter, hoge]),
                 alignment=ft.alignment.center,
             ),
             expand=True,
         ),
         ft.FloatingActionButton(icon=ft.Icons.REMOVE, on_click=increment_click)
-
+         
     )
 
 
