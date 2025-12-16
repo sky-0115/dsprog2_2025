@@ -1,5 +1,7 @@
 import flet as ft
-
+#三角関数を用いるためインポート
+import math
+from math import sin, cos, tan
 
 
 class CalcButton(ft.ElevatedButton):
@@ -31,6 +33,12 @@ class ExtraActionButton(CalcButton):
         self.bgcolor = ft.Colors.BLUE_GREY_100
         self.color = ft.Colors.BLACK
 
+#関数ボタン用のスタイル
+class ScientificButton(CalcButton):
+    def __init__(self, text, button_clicked):
+        CalcButton.__init__(self, text, button_clicked)
+        self.bgcolor = ft.Colors.BLUE_GREY_700
+        self.color = ft.Colors.WHITE
 
 class CalculatorApp(ft.Container):
     def __init__(self):
@@ -45,14 +53,11 @@ class CalculatorApp(ft.Container):
         self.content = ft.Column(
             controls=[
                 ft.Row(controls=[self.result], alignment="end"),
+
                 ft.Row(
                     controls=[
-                        ExtraActionButton(
-                            text="AC", button_clicked=self.button_clicked
-                        ),
-                        ExtraActionButton(
-                            text="+/-", button_clicked=self.button_clicked
-                        ),
+                        ExtraActionButton(text="AC", button_clicked=self.button_clicked),
+                        ExtraActionButton(text="+/-", button_clicked=self.button_clicked),
                         ExtraActionButton(text="%", button_clicked=self.button_clicked),
                         ActionButton(text="÷", button_clicked=self.button_clicked),
                     ]
@@ -83,11 +88,18 @@ class CalculatorApp(ft.Container):
                 ),
                 ft.Row(
                     controls=[
-                        DigitButton(
-                            text="0", expand=2, button_clicked=self.button_clicked
-                        ),
+                        DigitButton(text="0", expand=2, button_clicked=self.button_clicked),
                         DigitButton(text=".", button_clicked=self.button_clicked),
                         ActionButton(text="=", button_clicked=self.button_clicked),
+                    ]
+                ),
+                ft.Row(
+                    controls=[
+                        ScientificButton(text="sin", button_clicked=self.button_clicked),
+                        ScientificButton(text="cos", button_clicked=self.button_clicked),
+                        ScientificButton(text="tan", button_clicked=self.button_clicked),
+                        ScientificButton(text="√", button_clicked=self.button_clicked),
+                        ScientificButton(text="log", button_clicked=self.button_clicked),
                     ]
                 ),
             ]
@@ -136,6 +148,29 @@ class CalculatorApp(ft.Container):
                 self.result.value = str(
                     self.format_number(abs(float(self.result.value))))
                 
+        elif data == "sin":
+            #math.sin関数を用いて計算
+            self.result.value = self.format_number(math.sin(math.radians(float(self.result.value))))
+            self.new_operand = True
+
+        elif data == "cos":
+            self.result.value = self.format_number(math.cos(math.radians(float(self.result.value))))
+            self.new_operand = True
+
+        elif data == "tan":
+            self.result.value = self.format_number(math.tan(math.radians(float(self.result.value))))
+            self.new_operand = True
+
+        elif data == "√":
+            val = float(self.result.value)
+            self.result.value = self.format_number(math.sqrt(val)) if val  >= 0 else "Error"
+            self.new_operand = True
+        
+        elif data == "log":
+            val = float(self.result.value)
+            self.result.value = self.format_number(math.log10(val)) if val > 0 else "Error"
+            self.new_operand = True
+
         self.update()
 
     def format_number(self, num):
@@ -160,6 +195,16 @@ class CalculatorApp(ft.Container):
                 return "Error"
             else:
                 return self.format_number(operand1 / operand2)
+            
+    #小数点以下が長くなりすぎないように
+    def format_number(self, num):
+        if isinstance(num, str):
+            return num
+        res = round(num, 10)
+        if res % 1 == 0:
+            return int(res)
+        else:
+            return res
 
     def reset(self):
         self.operator = "+"
