@@ -38,7 +38,7 @@ def main(page: ft.Page):
     page.title = "☀︎ 天気予報"
     page.theme_mode = ft.ThemeMode.LIGHT
     page.padding = 0
-    page.scroll = ft.ScrollMode.ADAPTIVE 
+    page.scroll = None
 
     # 画面右側の設定（天気予報表示エリア）
     display_context = ft.Column(
