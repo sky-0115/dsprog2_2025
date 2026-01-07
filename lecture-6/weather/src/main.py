@@ -196,6 +196,7 @@ def main(page: ft.Page):
 
                 # DBに保存
                 save_weather_data(area_name, area_code, formatted_date, weather_text, str(temp_max), str(temp_min))
+                print(f"{formatted_date}のデータの保存命令を出しました")
                 
                 # カード作成
                 card = ft.Container(
@@ -489,13 +490,14 @@ def init_db():
             temp_max TEXT,
             temp_min TEXT,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            UNIQUE(area_code, date) #重複防止
+            UNIQUE(area_code, date) 
         )
     ''')
     conn.commit()
     conn.close()
 
 def save_weather_data(area_name, area_code, date, weather, t_max, t_min):
+    print(f"DEBUG:保存を開始します -> {area_name},{date}") #実行されたかの確認
     conn = sqlite3.connect(DB_PATH)
     cur = conn.cursor()
     try:
@@ -505,6 +507,7 @@ def save_weather_data(area_name, area_code, date, weather, t_max, t_min):
             VALUES (?, ?, ?, ?, ?, ?)
         ''', (area_name, area_code, date, weather, t_max, t_min))
         conn.commit()
+        print(f"DEBUG:保存が完了しました")
     except Exception as e:
         print(f"DB保存エラー: {e}")
     finally:
