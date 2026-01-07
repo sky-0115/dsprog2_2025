@@ -513,6 +513,17 @@ def save_weather_data(area_name, area_code, date, weather, t_max, t_min):
     finally:
         conn.close()
 
-
+def get_weather_from_db(area_code, date):
+    """DBから特定の地域・日付のデータを取得する"""
+    conn = sqlite3.connect(DB_PATH)
+    cur = conn.cursor()
+    cur.execute('''
+        SELECT weather_text, temp_max, temp_min 
+        FROM weather_history 
+        WHERE area_code = ? AND date = ?
+    ''', (area_code, date))
+    result = cur.fetchone()
+    conn.close()
+    return result # 見つからなければ None
 
 ft.app(target=main)
