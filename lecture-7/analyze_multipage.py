@@ -8,6 +8,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 from scipy import stats
+import re
 
 # 日本語フォント設定
 plt.rcParams['font.sans-serif'] = ['Hiragino Sans', 'Yu Gothic', 'Meiryo', 'Takao', 'IPAexGothic', 'IPAPGothic']
@@ -45,6 +46,38 @@ def calculate_wage_range(df):
     return df
 
 
+STORE_SUFFIX_PATTERN = re.compile(r'(店|支店|本店|総本店)$')
+
+
+def has_store_suffix(text):
+    if not text:
+        return False
+    name = re.sub(r"\s+", "", text)
+    return bool(STORE_SUFFIX_PATTERN.search(name))
+
+
+def reclassify_store_type(df):
+    """店名サフィックスと件数を使ってチェーンを再判定する"""
+    df = df.copy()
+    df['__name_norm'] = df['company_name'].fillna('').str.replace(r'\s+', '', regex=True)
+    name_counts = df['__name_norm'].value_counts()
+
+    def classify_row(row):
+        base = row['store_type']
+        if base == 'チェーン店':
+            return base
+        has_suffix = has_store_suffix(row['company_name']) or has_store_suffix(row['title'])
+        if has_suffix and name_counts.get(row['__name_norm'], 0) >= 2:
+            return 'チェーン店（店名推定）'
+        if has_suffix:
+            return '不明（店名あり）'
+        return base
+
+    df['store_type'] = df.apply(classify_row, axis=1)
+    df = df.drop(columns=['__name_norm'])
+    return df
+
+
 def analyze_by_store_type(df):
     """
     店舗タイプ別の統計分析
@@ -53,8 +86,9 @@ def analyze_by_store_type(df):
     print("=== チェーン店 vs 個人店 統計分析 ===")
     print("=" * 70)
     
-    # チェーン店と個人店のデータを抽出
-    chain_stores = df[df['store_type'] == 'チェーン店'].copy()
+    # チェーン店と個人店のデータを抽出（店名推定もチェーン扱い）
+    chain_mask = df['store_type'].fillna('').str.startswith('チェーン店')
+    chain_stores = df[chain_mask].copy()
     individual_stores = df[df['store_type'].isin(['個人店', '個人店（推定）'])].copy()
     
     print(f"\n【サンプルサイズ】")
@@ -314,6 +348,9 @@ def main():
     
     # 時給範囲を計算
     df = calculate_wage_range(df)
+
+    # 店名サフィックスを加味した再分類
+    df = reclassify_store_type(df)
     
     # 統計分析
     chain_stores, individual_stores = analyze_by_store_type(df)
